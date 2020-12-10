@@ -139,15 +139,23 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  delete urlDatabase[req.params.shortURL];
-  res.redirect("/urls");
+  if (users[req.cookies.user_id]) {
+    delete urlDatabase[req.params.shortURL];
+    res.redirect("/urls");
+  } else {
+    res.status(405).send("Permission denied.");
+  }
 });
 
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = {};
-  urlDatabase[req.params.id].longURL = req.body.newURL;
-  urlDatabase[req.params.id].userID = req.cookies.user_id;
-  res.redirect("/urls")
+  if (users[req.cookies.user_id]) {
+    urlDatabase[req.params.id] = {};
+    urlDatabase[req.params.id].longURL = req.body.newURL;
+    urlDatabase[req.params.id].userID = req.cookies.user_id;
+    res.redirect("/urls");
+  } else {
+    res.status(405).send("Permission denied.");
+  }
 });
 
 app.post("/logout", (req, res) => {
