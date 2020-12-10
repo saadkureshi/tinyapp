@@ -1,11 +1,17 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
-const cookieParser = require('cookie-parser');
-app.use(cookieParser());
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 const bcrypt = require('bcrypt');
+// const cookieParser = require('cookie-parser');
+// app.use(cookieParser());
+const cookieSession = require('cookie-session');
+
+app.use(cookieSession({
+  name: 'session',
+  keys: ["1"]
+}));
 
 
 app.set('view engine', 'ejs');
@@ -44,7 +50,7 @@ app.get("/urls.json", (req, res) => {
 app.get("/register", (req, res) => {
   const templateVars = { 
     urls: urlDatabase, 
-    user: users[req.cookies.user_id]
+    user: users[req.session.user_id]
   };
   res.render("register", templateVars);
 });
@@ -52,22 +58,22 @@ app.get("/register", (req, res) => {
 app.get("/login", (req, res) => {
   const templateVars = { 
     urls: urlDatabase, 
-    user: users[req.cookies.user_id]
+    user: users[req.session.user_id]
   };
   res.render("login", templateVars);
 });
 
 app.get("/urls", (req, res) => {
   const templateVars = { 
-    urls: filterURLDB(req.cookies.user_id), 
-    user: users[req.cookies.user_id]
+    urls: filterURLDB(req.session.user_id), 
+    user: users[req.session.user_id]
   };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    user: users[req.cookies.user_id]
+    user: users[req.session.user_id]
   };
   res.render("urls_new", templateVars);
 });
@@ -109,7 +115,8 @@ app.post("/register", (req, res) => {
     users[id]['id'] = id;
     users[id]['email'] = userEmail;
     users[id]['password'] = hashedPassword;
-    res.cookie('user_id', id);
+    // res.cookie('user_id', id);
+    req.session.user_id = id;
     res.redirect("/urls");
   }
 });
@@ -123,7 +130,8 @@ app.post("/login", (req, res) => {
   }
 
   if (userExists(userEmail) && passwordMatches(userEmail, userPassword)) {
-    res.cookie('user_id', findID(userEmail));
+    // res.cookie('user_id', findID(userEmail));
+    req.session["user_id"]= findID(userEmail);
     res.redirect("/urls");
   } else {
     res.status(400).send('Incorrect username or password.');
@@ -134,12 +142,12 @@ app.post("/urls", (req, res) => {
   let id = generateRandomString();
   urlDatabase[id] = {};
   urlDatabase[id].longURL = req.body.longURL;
-  urlDatabase[id].userID = req.cookies.user_id;
+  urlDatabase[id].userID = req.session.user_id;
   res.redirect(`/urls/${id}`);
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  if (users[req.cookies.user_id]) {
+  if (users[req.session.user_id]) {
     delete urlDatabase[req.params.shortURL];
     res.redirect("/urls");
   } else {
@@ -148,10 +156,10 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
-  if (users[req.cookies.user_id]) {
+  if (users[req.session.user_id]) {
     urlDatabase[req.params.id] = {};
     urlDatabase[req.params.id].longURL = req.body.newURL;
-    urlDatabase[req.params.id].userID = req.cookies.user_id;
+    urlDatabase[req.params.id].userID = req.session.user_id;
     res.redirect("/urls");
   } else {
     res.status(405).send("Permission denied.");
@@ -159,7 +167,8 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');
+  // res.clearCookie('user_id');
+  req.session = null;
   res.redirect("/urls");
 });
 
