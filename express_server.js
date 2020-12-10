@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
+const bcrypt = require('bcrypt');
 
 
 app.set('view engine', 'ejs');
@@ -48,17 +49,18 @@ app.post("/register", (req, res) => {
   let userPassword = req.body.password;
 
   if (userEmail === "" || userPassword === "" ) {
-    res.status(400).send('One or more fields are empty');
+    res.status(400).send('One or more fields are empty.');
   }
 
   if (userExists(userEmail)) {
     res.status(400).send('Account already exists.');
   } else {
     let id = generateRandomString();
+    let hashedPassword = bcrypt.hashSync(userPassword, 10);
     users[id] = {};
     users[id]['id'] = id;
     users[id]['email'] = userEmail;
-    users[id]['password'] = userPassword;
+    users[id]['password'] = hashedPassword;
     res.cookie('user_id', id);
     res.redirect("/urls");
   }
@@ -77,14 +79,14 @@ app.post("/login", (req, res) => {
   let userPassword = req.body.password;
 
   if (userEmail === "" || userPassword === "" ) {
-    res.status(400).send('One or more fields are empty');
+    res.status(400).send('One or more fields are empty.');
   }
 
-  if (userExists(userEmail) && passwordMatches(userPassword)) {
+  if (userExists(userEmail) && passwordMatches(userEmail, userPassword)) {
     res.cookie('user_id', findID(userEmail));
     res.redirect("/urls");
   } else {
-    res.redirect('/login');
+    res.status(400).send('Incorrect username or password.');
   }
 });
 
@@ -166,9 +168,9 @@ function userExists(userEmail) {
 }
 
 //function to check if entered password matches with one in database. Returns true or false.
-function passwordMatches(userPassword) {
+function passwordMatches(userEmail, userPassword) {
   for (let id in users) {
-    if (users[id].password === userPassword) {
+    if (users[id].email === userEmail && bcrypt.compareSync(userPassword, users[id].password)) {
       return true;
     }
   }
