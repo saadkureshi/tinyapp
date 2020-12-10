@@ -10,9 +10,14 @@ const bcrypt = require('bcrypt');
 
 app.set('view engine', 'ejs');
 
+// const urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
+
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
 const users = { 
@@ -107,7 +112,9 @@ app.get("/urls/new", (req, res) => {
 
 app.post("/urls", (req, res) => {
   let id = generateRandomString();
-  urlDatabase[id] = req.body.longURL;
+  urlDatabase[id] = {};
+  urlDatabase[id].longURL = req.body.longURL;
+  urlDatabase[id].userID = req.cookies.user_id;
   res.redirect(`/urls/${id}`);
 });
 
@@ -129,14 +136,14 @@ app.post("/logout", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { 
     shortURL: req.params.shortURL, 
-    longURL: urlDatabase[req.params.shortURL],
-    user: users[req.cookies.user_id]
+    longURL: urlDatabase[req.params.shortURL].longURL,
+    user: urlDatabase[req.params.shortURL].userID
   };
   res.render("urls_show", templateVars);
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
