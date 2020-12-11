@@ -3,7 +3,7 @@
 const bcrypt = require('bcrypt');
 
 //function to return a 6 char long random string.
-function generateRandomString() {
+const generateRandomString = () => {
   let charSet = "0123456789abcdefghijklmnopqrstuvwxyz";
   let id = "";
   for (let i = 0; i < 6; i++) {
@@ -13,7 +13,7 @@ function generateRandomString() {
 }
 
 //function to check if email already exists in database and send back true or false.
-function userExists(userEmail, database) {
+const userExists = (userEmail, database) => {
   for (let id in database) {
     if (database[id].email === userEmail) {
       return true;
@@ -23,7 +23,7 @@ function userExists(userEmail, database) {
 }
 
 //function to check if entered password matches with one in database. Returns true or false.
-function passwordMatches(userEmail, userPassword, database) {
+const passwordMatches = (userEmail, userPassword, database) => {
   for (let id in database) {
     if (database[id].email === userEmail && bcrypt.compareSync(userPassword, database[id].password)) {
       return true;
@@ -33,7 +33,7 @@ function passwordMatches(userEmail, userPassword, database) {
 }
 
 //function to return id from users database for a given email.
-function findID(userEmail, database) {
+const findID = (userEmail, database) => {
   for (let id in database) {
     if (database[id].email === userEmail) {
       return database[id].id;
@@ -43,7 +43,7 @@ function findID(userEmail, database) {
 }
 
 //function to return a filtered version of the URLs DB when given a user ID.
-function filterURLDB(userID, database) {
+const filterURLDB = (userID, database) => {
   let filteredURLDB = {};
   for (let url in database) {
     if (database[url].userID === userID) {
